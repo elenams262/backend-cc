@@ -5,14 +5,14 @@ require("dotenv").config(); // Para leer tu conexión a Mongo
 
 // Configuración de tu usuario Admin
 const adminData = {
-  name: "Davi",
-  surname: "Martínez",
-  email: "admin@calibradocorporal.com",
-  password: "adminpassword", // ⚠️ ¡Esta será tu contraseña para entrar!
+  name: "Admin",
+  surname: "Calibrado",
+  email: "info@calibradocorporal.es",
+  password: "adminpassword", // ⚠️ ¡Contraseña por defecto!
   role: "admin",
   profile: {
     limitations: [],
-    objectives: ["Dirigir el progreso constante"],
+    objectives: ["Administración"],
     status: "Entrenadora",
   },
 };

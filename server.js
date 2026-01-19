@@ -6,7 +6,13 @@ require("dotenv").config();
 const app = express();
 
 // Middlewares
-app.use(cors());
+// Middlewares
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "https://frontend-cc.vercel.app"],
+    credentials: true,
+  }),
+);
 app.use(express.json());
 // Servir carpeta uploads de forma estática
 app.use("/uploads", express.static("uploads"));

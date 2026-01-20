@@ -208,6 +208,30 @@ router.get("/workouts/client/:clientId", async (req, res) => {
   }
 });
 
+// @route   PUT api/admin/workouts/:id
+// @desc    Actualizar una rutina existente
+router.put("/workouts/:id", async (req, res) => {
+  try {
+    const { title, exercises } = req.body;
+    // exercises debe ser un array de objetos { exercise: ID, sets, reps, ... }
+
+    const updatedWorkout = await Workout.findByIdAndUpdate(
+      req.params.id,
+      { title, exercises },
+      { new: true }, // Devuelve el objeto actualizado
+    ).populate("exercises.exercise"); // Poblar para devolverlo completo si fuera necesario
+
+    if (!updatedWorkout) {
+      return res.status(404).json({ msg: "Rutina no encontrada" });
+    }
+
+    res.json(updatedWorkout);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Error al actualizar la rutina");
+  }
+});
+
 // @route   GET api/admin/feedback/:clientId
 // @desc    Obtener historial de entrenamientos completados por el cliente
 router.get("/feedback/:clientId", async (req, res) => {

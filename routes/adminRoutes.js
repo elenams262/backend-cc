@@ -204,6 +204,39 @@ router.delete("/exercises/:id", async (req, res) => {
   }
 });
 
+// @route   PUT api/admin/exercises/:id
+// @desc    Editar un ejercicio
+router.put("/exercises/:id", upload.single("image"), async (req, res) => {
+  try {
+    const { name, category, videoUrl, instructions, tags } = req.body;
+    let updateData = { name, category, videoUrl, instructions, tags };
+
+    // Si hay una nueva imagen, la actualizamos
+    if (req.file) {
+      updateData.image = `uploads/${req.file.filename}`;
+    }
+
+    // Para manejar tags, como vienen en FormData, pueden venir como array o strings repetidos
+    // Express/Multer a veces lo pasa diferente. El frontend lo manda loop.
+    // Si req.body.tags es un array, perfecto. Si no, lo convertimos.
+    // Pero en el modal actual, se mandan tags uno por uno.
+
+    // NOTA: Dependiendo de cómo lo envie el frontend (formData.append('tags', val)),
+    // req.body.tags será un array o un string unico.
+    // Vamos a asegurarnos de que se guarde correctamente.
+
+    const exercise = await Exercise.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true },
+    );
+    res.json(exercise);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Error al editar ejercicio");
+  }
+});
+
 // @route   POST api/admin/workouts
 // @desc    Asignar una nueva rutina a un cliente
 router.post("/workouts", async (req, res) => {

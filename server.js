@@ -1,11 +1,11 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const path = require("path");
 require("dotenv").config();
 
 const app = express();
 
-// Middlewares
 // Middlewares
 app.use(
   cors({
@@ -18,8 +18,10 @@ app.use(
   }),
 );
 app.use(express.json());
+
 // Servir carpeta uploads de forma estática
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 // Ruta de prueba
 app.get("/", (req, res) => {
   res.send({

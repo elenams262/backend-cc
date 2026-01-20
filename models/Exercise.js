@@ -24,6 +24,9 @@ const ExerciseSchema = new mongoose.Schema({
     type: String,
   },
   tags: [String], // Para búsquedas (ej: "hombro", "goma", "suelo")
+  image: {
+    type: String, // Ruta de la imagen subida (opcional)
+  },
 });
 
 module.exports = mongoose.model("Exercise", ExerciseSchema);

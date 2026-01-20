@@ -1,5 +1,32 @@
 const express = require("express");
 const router = express.Router();
+const multer = require("multer");
+const path = require("path");
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    // Usamos el ID del usuario si está disponible, sino un prefijo 'exercise'
+    const prefix = req.user ? req.user.id : "exercise";
+    cb(null, prefix + "-" + Date.now() + path.extname(file.originalname));
+  },
+});
+
+const upload = multer({
+  storage: storage,
+  fileFilter: function (req, file, cb) {
+    const filetypes = /jpeg|jpg|png|webp/;
+    const mimetype = filetypes.test(file.mimetype);
+    const extname = filetypes.test(
+      path.extname(file.originalname).toLowerCase(),
+    );
+    if (mimetype && extname) return cb(null, true);
+    cb(new Error("Solo imágenes"));
+  },
+});
+
 const User = require("../models/User");
 const Evaluation = require("../models/Evaluation");
 const Exercise = require("../models/Exercise");
@@ -138,9 +165,13 @@ router.get("/evaluations/:clientId", async (req, res) => {
 
 // @route   POST api/admin/exercises
 // @desc    Crear un nuevo ejercicio
-router.post("/exercises", async (req, res) => {
+router.post("/exercises", upload.single("image"), async (req, res) => {
   try {
-    const newExercise = new Exercise(req.body);
+    const data = req.body;
+    if (req.file) {
+      data.image = `uploads/${req.file.filename}`;
+    }
+    const newExercise = new Exercise(data);
     const exercise = await newExercise.save();
     res.json(exercise);
   } catch (err) {
@@ -454,31 +485,7 @@ router.post("/users/:id/recovery-code", async (req, res) => {
   }
 });
 
-// Configuración de Multer para Admin (Podríamos refactorizar en un util, pero por rapidez duplicamos config)
-const multer = require("multer");
-const path = require("path");
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/");
-  },
-  filename: function (req, file, cb) {
-    cb(null, req.user.id + "-" + Date.now() + path.extname(file.originalname));
-  },
-});
-
-const upload = multer({
-  storage: storage,
-  fileFilter: function (req, file, cb) {
-    const filetypes = /jpeg|jpg|png|webp/;
-    const mimetype = filetypes.test(file.mimetype);
-    const extname = filetypes.test(
-      path.extname(file.originalname).toLowerCase(),
-    );
-    if (mimetype && extname) return cb(null, true);
-    cb(new Error("Solo imágenes"));
-  },
-});
+// Configuración de Multer MOVIDA AL INICIO
 
 // @route   POST api/admin/avatar
 router.post("/avatar", auth(), upload.single("avatar"), async (req, res) => {

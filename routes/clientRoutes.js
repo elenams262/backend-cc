@@ -27,13 +27,14 @@ router.get("/workouts", auth(), async (req, res) => {
 // @access  Private
 router.post("/feedback", auth(), async (req, res) => {
   try {
-    const { workoutId, rpe, comments } = req.body;
+    const { workoutId, rpe, comments, exercisesData } = req.body;
 
     const newFeedback = new Feedback({
       client: req.user.id,
       workout: workoutId,
       rpe,
       comments,
+      exercisesData,
     });
 
     await newFeedback.save();

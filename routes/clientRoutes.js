@@ -59,35 +59,8 @@ router.get("/feedback", auth(), async (req, res) => {
 });
 
 // Configuración de Multer para subir imágenes
-const multer = require("multer");
-const path = require("path");
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/"); // Asegúrate de que esta carpeta exista
-  },
-  filename: function (req, file, cb) {
-    // Nombre único: id_usuario + timestamp + extension
-    cb(null, req.user.id + "-" + Date.now() + path.extname(file.originalname));
-  },
-});
-
-const upload = multer({
-  storage: storage,
-  fileFilter: function (req, file, cb) {
-    // Solo permitir imágenes
-    const filetypes = /jpeg|jpg|png|webp/;
-    const mimetype = filetypes.test(file.mimetype);
-    const extname = filetypes.test(
-      path.extname(file.originalname).toLowerCase(),
-    );
-
-    if (mimetype && extname) {
-      return cb(null, true);
-    }
-    cb(new Error("Solo se permiten archivos de imagen (jpg, jpeg, png, webp)"));
-  },
-});
+// Configuración de almacenamiento (Cloudinary o Local)
+const { upload, isCloudinaryConfigured } = require("../config/storage");
 
 // @route   POST api/client/avatar
 // @desc    Subir foto de perfil
@@ -98,9 +71,10 @@ router.post("/avatar", auth(), upload.single("avatar"), async (req, res) => {
     }
 
     // Guardar ruta en la BD
-    // En Windows las rutas salen con '\', hay que normalizar si queremos URL web
-    // Pero Express static suele manejarlo. Mejor guardar relativa: "uploads/filename"
-    const avatarUrl = `uploads/${req.file.filename}`;
+    // Si es Cloudinary, path es URL completa. Si es local, relative.
+    const avatarUrl = isCloudinaryConfigured
+      ? req.file.path
+      : `uploads/${req.file.filename}`;
 
     // Necesitamos el modelo User aquí. Si no está importado, fallará.
     // Viendo el archivo, User NO está importado. Hay que importarlo arriba o usar mongoose.model

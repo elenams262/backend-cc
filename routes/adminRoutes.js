@@ -3,29 +3,7 @@ const router = express.Router();
 const multer = require("multer");
 const path = require("path");
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/");
-  },
-  filename: function (req, file, cb) {
-    // Usamos el ID del usuario si está disponible, sino un prefijo 'exercise'
-    const prefix = req.user ? req.user.id : "exercise";
-    cb(null, prefix + "-" + Date.now() + path.extname(file.originalname));
-  },
-});
-
-const upload = multer({
-  storage: storage,
-  fileFilter: function (req, file, cb) {
-    const filetypes = /jpeg|jpg|png|webp/;
-    const mimetype = filetypes.test(file.mimetype);
-    const extname = filetypes.test(
-      path.extname(file.originalname).toLowerCase(),
-    );
-    if (mimetype && extname) return cb(null, true);
-    cb(new Error("Solo imágenes"));
-  },
-});
+const { upload, isCloudinaryConfigured } = require("../config/storage");
 
 const User = require("../models/User");
 const Evaluation = require("../models/Evaluation");
@@ -169,7 +147,11 @@ router.post("/exercises", upload.single("image"), async (req, res) => {
   try {
     const data = req.body;
     if (req.file) {
-      data.image = `uploads/${req.file.filename}`;
+      // Si usamos Cloudinary, req.file.path ya es la URL completa HTTPS
+      // Si es local, construimos la ruta relativa
+      data.image = isCloudinaryConfigured
+        ? req.file.path
+        : `uploads/${req.file.filename}`;
     }
     const newExercise = new Exercise(data);
     const exercise = await newExercise.save();
@@ -213,7 +195,9 @@ router.put("/exercises/:id", upload.single("image"), async (req, res) => {
 
     // Si hay una nueva imagen, la actualizamos
     if (req.file) {
-      updateData.image = `uploads/${req.file.filename}`;
+      updateData.image = isCloudinaryConfigured
+        ? req.file.path
+        : `uploads/${req.file.filename}`;
     }
 
     // Para manejar tags, como vienen en FormData, pueden venir como array o strings repetidos
@@ -528,7 +512,9 @@ router.post("/avatar", auth(), upload.single("avatar"), async (req, res) => {
     // Necesitamos que Admin sea un User o tener un modelo Admin separado?
     // Usamos el modelo User ya que role='admin'
 
-    const avatarUrl = `uploads/${req.file.filename}`;
+    const avatarUrl = isCloudinaryConfigured
+      ? req.file.path
+      : `uploads/${req.file.filename}`;
     const user = await User.findById(req.user.id);
     user.avatar = avatarUrl;
     await user.save();

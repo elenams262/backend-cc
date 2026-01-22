@@ -422,13 +422,18 @@ router.delete("/users/:id", async (req, res) => {
 // @desc    Editar datos de un usuario
 router.put("/users/:id", async (req, res) => {
   try {
-    const { name, email, phone, objective, injuries, notes } = req.body;
+    const { name, surname, email, phone, profile } = req.body;
+
+    // Construir objeto de actualización
+    const updateData = { name, surname, email, phone };
+    if (profile) {
+      updateData.profile = profile;
+    }
+
     // Buscamos y actualizamos. {new: true} devuelve el objeto actualizado.
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      { name, email, phone, objective, injuries, notes },
-      { new: true },
-    ).select("-password");
+    const user = await User.findByIdAndUpdate(req.params.id, updateData, {
+      new: true,
+    }).select("-password");
     res.json(user);
   } catch (err) {
     console.error(err.message);

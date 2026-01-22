@@ -15,6 +15,7 @@ const UserSchema = new mongoose.Schema({
   inviteCode: { type: String }, // Código para completar registro
   recoveryCode: { type: String }, // Código para recuperar contraseña
   avatar: { type: String }, // URL de la foto de perfil
+  phone: { type: String }, // Teléfono de contacto
 });
 
 module.exports = mongoose.model("User", UserSchema);

@@ -13,7 +13,7 @@ router.get("/workouts", auth(), async (req, res) => {
     // Buscamos rutinas donde el 'client' coincida con el ID del usuario logueado (req.user.id)
     const workouts = await Workout.find({ client: req.user.id })
       .populate("exercises.exercise") // Rellenar info de los ejercicios (nombre, video...)
-      .sort({ dateAssigned: -1 });
+      .sort({ order: 1, dateAssigned: -1 });
 
     res.json(workouts);
   } catch (err) {

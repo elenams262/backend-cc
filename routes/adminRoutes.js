@@ -248,7 +248,7 @@ router.get("/workouts/client/:clientId", async (req, res) => {
   try {
     const workouts = await Workout.find({ client: req.params.clientId })
       .populate("exercises.exercise") // Esto rellena los datos del ejercicio (nombre, video...)
-      .sort({ dateAssigned: -1 });
+      .sort({ order: 1, dateAssigned: -1 });
     res.json(workouts);
   } catch (err) {
     console.error(err.message);
@@ -277,6 +277,27 @@ router.put("/workouts/:id", async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Error al actualizar la rutina");
+  }
+});
+
+// @route   PUT api/admin/workouts/reorder
+// @desc    Reordenar rutinas de un cliente
+router.put("/workouts/reorder", async (req, res) => {
+  try {
+    const { updates } = req.body; // Array de { _id, order }
+    if (!updates || !Array.isArray(updates)) {
+      return res.status(400).json({ msg: "Datos inválidos" });
+    }
+
+    const promises = updates.map((update) =>
+      Workout.findByIdAndUpdate(update._id, { order: update.order }),
+    );
+
+    await Promise.all(promises);
+    res.json({ msg: "Orden actualizado correctamente" });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Error al reordenar rutinas");
   }
 });
 

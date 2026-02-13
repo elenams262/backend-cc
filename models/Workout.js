@@ -34,6 +34,10 @@ const WorkoutSchema = new mongoose.Schema({
     enum: ["Activo", "Completado", "Archivado"],
     default: "Activo",
   },
+  order: {
+    type: Number,
+    default: 100, // Por defecto al final si no se especifica. Se puede ajustar.
+  },
 });
 
 module.exports = mongoose.model("Workout", WorkoutSchema);

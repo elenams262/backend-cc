@@ -22,6 +22,30 @@ router.get("/workouts", auth(), async (req, res) => {
   }
 });
 
+// @route   PUT api/client/workouts/reorder
+// @desc    Reordenar rutinas del usuario (para mover al final al completar)
+router.put("/workouts/reorder", auth(), async (req, res) => {
+  try {
+    const { updates } = req.body; // Array de { _id, order }
+    if (!updates || !Array.isArray(updates)) {
+      return res.status(400).json({ msg: "Datos inválidos" });
+    }
+
+    const promises = updates.map((update) =>
+      Workout.findOneAndUpdate(
+        { _id: update._id, client: req.user.id }, // Seguridad: solo sus rutinas
+        { order: update.order },
+      ),
+    );
+
+    await Promise.all(promises);
+    res.json({ msg: "Orden actualizado correctamente" });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Error al reordenar rutinas");
+  }
+});
+
 // @route   POST api/client/feedback
 // @desc    Guardar feedback de un entrenamiento
 // @access  Private

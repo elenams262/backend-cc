@@ -29,16 +29,61 @@ router.post("/feedback", auth(), async (req, res) => {
   try {
     const { workoutId, rpe, comments, exercisesData } = req.body;
 
-    const newFeedback = new Feedback({
+    // Buscamos feedback de HOY para este usuario y workout
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    let feedback = await Feedback.findOne({
       client: req.user.id,
       workout: workoutId,
-      rpe,
-      comments,
-      exercisesData,
+      date: { $gte: startOfDay, $lte: endOfDay },
     });
 
-    await newFeedback.save();
-    res.json(newFeedback);
+    if (feedback) {
+      // Si existe, actualizamos
+      if (rpe !== undefined) feedback.rpe = rpe;
+      if (comments !== undefined) feedback.comments = comments;
+
+      // Actualizar o añadir datos de ejercicios
+      if (exercisesData && Array.isArray(exercisesData)) {
+        exercisesData.forEach((newEx) => {
+          const existingIndex = feedback.exercisesData.findIndex(
+            (ex) => ex.exerciseId.toString() === newEx.exerciseId,
+          );
+
+          if (existingIndex > -1) {
+            // Actualizar campos específicos
+            if (newEx.weightUsed !== undefined)
+              feedback.exercisesData[existingIndex].weightUsed =
+                newEx.weightUsed;
+            if (newEx.rpe !== undefined)
+              feedback.exercisesData[existingIndex].rpe = newEx.rpe;
+            if (newEx.notes !== undefined)
+              feedback.exercisesData[existingIndex].notes = newEx.notes;
+          } else {
+            // Añadir nuevo
+            feedback.exercisesData.push(newEx);
+          }
+        });
+      }
+
+      await feedback.save();
+      res.json(feedback);
+    } else {
+      // Si no existe, creamos uno nuevo
+      const newFeedback = new Feedback({
+        client: req.user.id,
+        workout: workoutId,
+        rpe, // Puede ser undefined si es un guardado parcial
+        comments,
+        exercisesData,
+      });
+
+      await newFeedback.save();
+      res.json(newFeedback);
+    }
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Error al guardar feedback");

@@ -17,7 +17,6 @@ const FeedbackSchema = new mongoose.Schema({
   },
   rpe: {
     type: Number, // Escala de esfuerzo percibido (1-10)
-    required: true,
   },
   comments: {
     type: String,
@@ -29,6 +28,8 @@ const FeedbackSchema = new mongoose.Schema({
       exerciseId: { type: mongoose.Schema.Types.ObjectId, ref: "Exercise" },
       exerciseName: String, // Guardamos nombre por si borran el ejercicio base
       weightUsed: String, // Ej: "20kg", "Banda Roja", etc.
+      rpe: Number,
+      notes: String,
     },
   ],
 });

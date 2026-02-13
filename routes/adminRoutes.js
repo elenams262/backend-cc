@@ -256,6 +256,27 @@ router.get("/workouts/client/:clientId", async (req, res) => {
   }
 });
 
+// @route   PUT api/admin/workouts/reorder
+// @desc    Reordenar rutinas de un cliente
+router.put("/workouts/reorder", async (req, res) => {
+  try {
+    const { updates } = req.body; // Array de { _id, order }
+    if (!updates || !Array.isArray(updates)) {
+      return res.status(400).json({ msg: "Datos inválidos" });
+    }
+
+    const promises = updates.map((update) =>
+      Workout.findByIdAndUpdate(update._id, { order: update.order }),
+    );
+
+    await Promise.all(promises);
+    res.json({ msg: "Orden actualizado correctamente" });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Error al reordenar rutinas");
+  }
+});
+
 // @route   PUT api/admin/workouts/:id
 // @desc    Actualizar una rutina existente
 router.put("/workouts/:id", async (req, res) => {
@@ -277,27 +298,6 @@ router.put("/workouts/:id", async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Error al actualizar la rutina");
-  }
-});
-
-// @route   PUT api/admin/workouts/reorder
-// @desc    Reordenar rutinas de un cliente
-router.put("/workouts/reorder", async (req, res) => {
-  try {
-    const { updates } = req.body; // Array de { _id, order }
-    if (!updates || !Array.isArray(updates)) {
-      return res.status(400).json({ msg: "Datos inválidos" });
-    }
-
-    const promises = updates.map((update) =>
-      Workout.findByIdAndUpdate(update._id, { order: update.order }),
-    );
-
-    await Promise.all(promises);
-    res.json({ msg: "Orden actualizado correctamente" });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Error al reordenar rutinas");
   }
 });
 
